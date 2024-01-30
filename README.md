@@ -1,0 +1,2 @@
+cd comment
+npm start

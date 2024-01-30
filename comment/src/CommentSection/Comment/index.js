@@ -68,14 +68,20 @@ const Comment = ({ comments,setComments}) => {
         setEditedName('');
         setEditedComment('');
     }
-};
+  };
 
-const handleDelete = (index) => {
-    const deleteComments = [...comments];
-    deleteComments.splice(index, 1);
-    setComments(deleteComments);
-    localStorage.setItem('comments', JSON.stringify(deleteComments));
-};
+  const handleDelete = (index) => {
+    const deletedComment = comments[index];
+    const updatedComments = comments.filter(comment => {
+        return comment.id !== deletedComment.id && comment.replyId !== deletedComment.id;
+    });
+
+    setComments(updatedComments);
+    localStorage.setItem('comments', JSON.stringify(updatedComments));
+  };
+
+
+  console.log(comments,"comments")
 
 
   const handleReply =(comment) =>{

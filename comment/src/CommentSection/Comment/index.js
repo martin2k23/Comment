@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './styles.css';
 import DeleteIcon from './DeleteIcon.js'
-import ReplyContent from '../ReplyContent';
+import PostContent from '../PostContent/index.js';
 
 const formatDate = (dateString) => {
   const parts = dateString.split('/');
@@ -36,11 +36,12 @@ const formatDate = (dateString) => {
   return `${day}${suffix} ${monthNames[parseInt(month, 10) - 1]} ${year}`;
 };
 
-const Comment = ({ comments,setComments }) => {
+const Comment = ({ comments,setComments}) => {
   const [reply, setReply] = useState(false)
   const [editIndex, setEditIndex] = useState(-1);
   const [editedName, setEditedName] = useState('');
   const [editedComment, setEditedComment] = useState('');
+
 
   const handleEdit = (index, currentComment) => {
     setEditIndex(index);
@@ -56,70 +57,89 @@ const Comment = ({ comments,setComments }) => {
 
   const handleSaveEdit = (index) => {
     if (editedName.trim() !== '' && editedComment.trim() !== '') {
-      const currentDate = new Date().toLocaleDateString();
-      const updatedComments = [...comments];
-      updatedComments[index].name = editedName;
-      updatedComments[index].comment = editedComment;
-      updatedComments[index].date = currentDate;
-      setEditIndex(-1);
-      setEditedName('');
-      setEditedComment('');
+        const currentDate = new Date().toLocaleDateString();
+        const updatedComments = [...comments];
+        updatedComments[index].name = editedName;
+        updatedComments[index].comment = editedComment;
+        updatedComments[index].date = currentDate;
+        setComments(updatedComments);
+        localStorage.setItem('comments', JSON.stringify(updatedComments));
+        setEditIndex(-1);
+        setEditedName('');
+        setEditedComment('');
     }
-  };
+};
 
-  const handleDelete = (index) => {
+const handleDelete = (index) => {
     const deleteComments = [...comments];
-    deleteComments.splice(index, 1); 
+    deleteComments.splice(index, 1);
     setComments(deleteComments);
-  };
+    localStorage.setItem('comments', JSON.stringify(deleteComments));
+};
+
+
+  const handleReply =(comment) =>{
+    setReply(comment)
+  }
 
   return (
     <div>
       {comments.map((comment, index) => (
-        <div className="comment-container" key={index}>
-          <div className='name-container'>
+        <div style={{display:"flex",justifyContent:comment?.replyId ? "flex-end" :"flex-start" }}>
+            <div className="comment-container" key={index}>
+            <div className='name-container'>
+                {editIndex === index ?  
+                <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    placeholder="Name"
+                    className="input-name"
+                /> :
+                <div style={{fontWeight:"bold",fontSize:"12px"}}>{comment?.name}</div>
+                }
+                <div style={{fontSize:"12px"}}>{formatDate(comment.date)}</div>
+            </div>
+
             {editIndex === index ?  
-              <input
-                type="text"
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
-                placeholder="Name"
-                className="input-name"
-              /> :
-              <div style={{fontWeight:"bold",fontSize:"12px"}}>{comment?.name}</div>
+                <textarea
+                value={editedComment}
+                onChange={(e) => setEditedComment(e.target.value)}
+                rows={4}
+                cols={50}
+                placeholder="Comment"
+                className="input-comment"
+                /> :
+                <div className="content">{comment?.comment}</div>
             }
-            <div style={{fontSize:"12px"}}>{formatDate(comment.date)}</div>
-          </div>
+            <div>
+                {editIndex === index ? (
+                <div className="action-container">
+                    <div onClick={() => handleSaveEdit(index)}>Save</div>
+                    <div onClick={handleCancelEdit}>Cancel</div>
+                </div>
+                ) : (
+                <div className="action-container">
+                    {comment?.replyId ? null :<div className="reply" onClick={()=> handleReply(comment)}>Reply</div>}
+                    <div className="edit" onClick={() => handleEdit(index, comment)}>Edit</div>
+                </div>
+                )}
+            </div>
 
-          {editIndex === index ?  
-            <textarea
-              value={editedComment}
-              onChange={(e) => setEditedComment(e.target.value)}
-              rows={4}
-              cols={50}
-              placeholder="Comment"
-              className="input-comment"
-            /> :
-            <div className="content">{comment?.comment}</div>
-          }
-          <div>
-            {editIndex === index ? (
-              <div className="action-container">
-                <div onClick={() => handleSaveEdit(index)}>Save</div>
-                <div onClick={handleCancelEdit}>Cancel</div>
-              </div>
-            ) : (
-              <div className="action-container">
-                <div className="reply" onClick={()=> setReply(true)}>Reply</div>
-                <div className="edit" onClick={() => handleEdit(index, comment)}>Edit</div>
-              </div>
-            )}
-          </div>
-
-          <DeleteIcon onClick={() => handleDelete(index)} />
+            <DeleteIcon onClick={() => handleDelete(index)} />
+            </div>
         </div>
       ))}
-      {reply &&  <ReplyContent comments={comments} setComments={setComments}/>}
+
+    {reply &&  
+        <PostContent 
+            comments={comments} 
+            setComments={setComments} 
+            reply={reply} 
+            setReply={setReply}
+        />
+    }
+
     </div>
   );
 };
